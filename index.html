@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" class="h-full select-none">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Nova WebOS</title>
+    <meta name="description" content="A fully interactive, futuristic browser operating system featuring window management, built-in apps, Nova AI assistant, and rich desktop customization." />
+    <meta property="og:title" content="Nova WebOS" />
+    <meta property="og:description" content="A fully interactive, futuristic browser operating system featuring window management, built-in apps, Nova AI assistant, and rich desktop customization." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/index.css" />
+  </head>
+  <body class="h-full w-full overflow-hidden bg-slate-950 text-slate-100 font-sans antialiased m-0 p-0">
+    <div id="os-container" class="relative w-full h-full overflow-hidden flex flex-col bg-slate-950">
+      <!-- Boot & Welcome Screen mount -->
+      <div id="boot-overlay" class="absolute inset-0 z-[10000] flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-700"></div>
+
+      <!-- Live Interactive Background Canvas -->
+      <canvas id="wallpaper-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
+      <div id="wallpaper-overlay" class="absolute inset-0 pointer-events-none z-0 transition-all duration-500"></div>
+
+      <!-- Desktop Environment -->
+      <main id="desktop" class="flex-1 w-full relative overflow-hidden z-10 select-none"></main>
+
+      <!-- Taskbar / Dock (Dedicated bottom bar, z-[9990]) -->
+      <footer id="taskbar" class="shrink-0 h-14 w-full z-[9990] relative"></footer>
+
+      <!-- Notification Toast Container -->
+      <div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

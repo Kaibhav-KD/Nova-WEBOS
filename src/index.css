@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Syne', sans-serif;
+  --font-tech: 'Chakra Petch', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Default theme: Cyberpunk Neon */
+  --color-accent: #00f0ff;
+  --color-accent-hover: #38f4ff;
+  --color-accent-rgb: 0, 240, 255;
+  --color-secondary: #ec4899;
+  --color-glass: rgba(13, 18, 32, 0.78);
+  --color-glass-solid: #0d1220;
+  --color-glass-header: rgba(18, 26, 46, 0.85);
+  --color-glass-border: rgba(255, 255, 255, 0.12);
+  --color-taskbar: rgba(9, 13, 24, 0.88);
+  --color-taskbar-border: rgba(255, 255, 255, 0.08);
+  --accent-glow: 0 0 25px rgba(0, 240, 255, 0.35);
+  --accent-glow-subtle: 0 0 12px rgba(0, 240, 255, 0.2);
+  --window-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--color-glass-border);
+  --window-shadow-active: 0 25px 60px -5px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(var(--color-accent-rgb), 0.5), 0 0 30px rgba(var(--color-accent-rgb), 0.25);
+}
+
+/* Themes */
+[data-theme="obsidian"] {
+  --color-accent: #f8fafc;
+  --color-accent-hover: #e2e8f0;
+  --color-accent-rgb: 248, 250, 252;
+  --color-secondary: #d97706;
+  --color-glass: rgba(15, 17, 21, 0.85);
+  --color-glass-solid: #0f1115;
+  --color-glass-header: rgba(23, 26, 33, 0.9);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-taskbar: rgba(11, 13, 17, 0.92);
+  --color-taskbar-border: rgba(255, 255, 255, 0.07);
+  --accent-glow: 0 0 25px rgba(255, 255, 255, 0.2);
+  --accent-glow-subtle: 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="aurora"] {
+  --color-accent: #c084fc;
+  --color-accent-hover: #d8b4fe;
+  --color-accent-rgb: 192, 132, 252;
+  --color-secondary: #f43f5e;
+  --color-glass: rgba(22, 14, 38, 0.82);
+  --color-glass-solid: #160e26;
+  --color-glass-header: rgba(33, 20, 56, 0.88);
+  --color-glass-border: rgba(216, 180, 254, 0.18);
+  --color-taskbar: rgba(15, 9, 27, 0.92);
+  --color-taskbar-border: rgba(216, 180, 254, 0.12);
+  --accent-glow: 0 0 25px rgba(192, 132, 252, 0.35);
+  --accent-glow-subtle: 0 0 12px rgba(192, 132, 252, 0.2);
+}
+
+[data-theme="emerald"] {
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+  --color-accent-rgb: 16, 185, 129;
+  --color-secondary: #06b6d4;
+  --color-glass: rgba(8, 24, 18, 0.82);
+  --color-glass-solid: #081812;
+  --color-glass-header: rgba(13, 36, 28, 0.88);
+  --color-glass-border: rgba(52, 211, 153, 0.18);
+  --color-taskbar: rgba(5, 18, 13, 0.92);
+  --color-taskbar-border: rgba(52, 211, 153, 0.12);
+  --accent-glow: 0 0 25px rgba(16, 185, 129, 0.35);
+  --accent-glow-subtle: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="solar"] {
+  --color-accent: #f97316;
+  --color-accent-hover: #fb923c;
+  --color-accent-rgb: 249, 115, 22;
+  --color-secondary: #eab308;
+  --color-glass: rgba(26, 15, 8, 0.82);
+  --color-glass-solid: #1a0f08;
+  --color-glass-header: rgba(38, 22, 12, 0.88);
+  --color-glass-border: rgba(251, 146, 60, 0.18);
+  --color-taskbar: rgba(18, 10, 5, 0.92);
+  --color-taskbar-border: rgba(251, 146, 60, 0.12);
+  --accent-glow: 0 0 25px rgba(249, 115, 22, 0.35);
+  --accent-glow-subtle: 0 0 12px rgba(249, 115, 22, 0.2);
+}
+
+/* Glass styling classes */
+.glass-panel {
+  background-color: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+}
+
+.glass-header {
+  background-color: var(--color-glass-header);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--color-glass-border);
+}
+
+/* Window styles */
+.os-window {
+  box-shadow: var(--window-shadow);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+  contain: layout style;
+}
+
+.os-window.active {
+  box-shadow: var(--window-shadow-active);
+  border-color: rgba(var(--color-accent-rgb), 0.45);
+}
+
+.os-window.minimized {
+  opacity: 0;
+  transform: translateY(120px) scale(0.65);
+  pointer-events: none !important;
+}
+
+.os-window.maximized {
+  border-radius: 0px !important;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  z-index: 20;
+}
+.resize-n { top: 0; left: 6px; right: 6px; height: 6px; cursor: n-resize; }
+.resize-s { bottom: 0; left: 6px; right: 6px; height: 6px; cursor: s-resize; }
+.resize-e { top: 6px; bottom: 6px; right: 0; width: 6px; cursor: e-resize; }
+.resize-w { top: 6px; bottom: 6px; left: 0; width: 6px; cursor: w-resize; }
+.resize-ne { top: 0; right: 0; width: 12px; height: 12px; cursor: ne-resize; z-index: 21; }
+.resize-nw { top: 0; left: 0; width: 12px; height: 12px; cursor: nw-resize; z-index: 21; }
+.resize-se { bottom: 0; right: 0; width: 12px; height: 12px; cursor: se-resize; z-index: 21; }
+.resize-sw { bottom: 0; left: 0; width: 12px; height: 12px; cursor: sw-resize; z-index: 21; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-accent-rgb), 0.5);
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(var(--color-accent-rgb), 0.3);
+  color: #ffffff;
+}
+
+/* Glowing text utility */
+.glow-text {
+  text-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.6);
+}
+
+/* Keyframe animations */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 4s infinite ease-in-out;
+}
+
+/* Custom fonts */
+.font-tech {
+  font-family: var(--font-tech);
+}
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
