@@ -239,31 +239,76 @@ export const devLogsData: DevLog[] = [
 ];
 
 class StorageManager {
-  public getSettings(): OsSettings {
+  private memoryCache: Map<string, string> = new Map();
+
+  private safeGetItem(key: string): string | null {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (data) {
-        return { ...defaultSettings, ...JSON.parse(data) };
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const val = localStorage.getItem(key);
+        if (val !== null) return val;
       }
     } catch {
-      // fallback
+      // Storage restricted (e.g. sandboxed iframe or private browsing)
+    }
+    return this.memoryCache.get(key) || null;
+  }
+
+  private safeSetItem(key: string, value: string): boolean {
+    // Always keep memory cache synchronized
+    this.memoryCache.set(key, value);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(key, value);
+        return true;
+      }
+    } catch {
+      // Quota exceeded or storage blocked; in-memory cache preserves data during session
+    }
+    return false;
+  }
+
+  private safeRemoveItem(key: string) {
+    this.memoryCache.delete(key);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  public getSettings(): OsSettings {
+    try {
+      const data = this.safeGetItem(STORAGE_KEYS.SETTINGS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object') {
+          return { ...defaultSettings, ...parsed };
+        }
+      }
+    } catch {
+      // fallback to defaults
     }
     return defaultSettings;
   }
 
   public saveSettings(settings: OsSettings) {
     try {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+      this.safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     } catch {
-      // localStorage disabled or quota exceeded
+      // ignore
     }
   }
 
   public getNotes(): Note[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.NOTES);
+      const data = this.safeGetItem(STORAGE_KEYS.NOTES);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((n) => n && typeof n.id === 'string' && typeof n.title === 'string');
+        }
       }
     } catch {
       // fallback
@@ -273,7 +318,7 @@ class StorageManager {
 
   public saveNotes(notes: Note[]) {
     try {
-      localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes));
+      this.safeSetItem(STORAGE_KEYS.NOTES, JSON.stringify(notes));
     } catch {
       // ignore
     }
@@ -281,9 +326,12 @@ class StorageManager {
 
   public getEvents(): CalendarEvent[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
+      const data = this.safeGetItem(STORAGE_KEYS.EVENTS);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
       }
     } catch {
       // fallback
@@ -293,7 +341,7 @@ class StorageManager {
 
   public saveEvents(events: CalendarEvent[]) {
     try {
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+      this.safeSetItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
     } catch {
       // ignore
     }
@@ -301,9 +349,12 @@ class StorageManager {
 
   public getFiles(): FileItem[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.FILES);
+      const data = this.safeGetItem(STORAGE_KEYS.FILES);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
     } catch {
       // fallback
@@ -313,34 +364,36 @@ class StorageManager {
 
   public saveFiles(files: FileItem[]) {
     try {
-      localStorage.setItem(STORAGE_KEYS.FILES, JSON.stringify(files));
+      this.safeSetItem(STORAGE_KEYS.FILES, JSON.stringify(files));
     } catch {
       // ignore
     }
   }
 
   public resetAllData() {
-    try {
-      localStorage.removeItem(STORAGE_KEYS.SETTINGS);
-      localStorage.removeItem(STORAGE_KEYS.NOTES);
-      localStorage.removeItem(STORAGE_KEYS.EVENTS);
-      localStorage.removeItem(STORAGE_KEYS.FILES);
-      localStorage.removeItem(STORAGE_KEYS.CALC_HISTORY);
-    } catch {
-      // ignore
-    }
+    this.safeRemoveItem(STORAGE_KEYS.SETTINGS);
+    this.safeRemoveItem(STORAGE_KEYS.NOTES);
+    this.safeRemoveItem(STORAGE_KEYS.EVENTS);
+    this.safeRemoveItem(STORAGE_KEYS.FILES);
+    this.safeRemoveItem(STORAGE_KEYS.CALC_HISTORY);
   }
 
   public getStorageUsage(): { usedKb: number; percent: number } {
     try {
       let total = 0;
-      for (const x in localStorage) {
-        if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
-          total += (localStorage[x].length + x.length) * 2;
+      if (typeof window !== 'undefined' && window.localStorage) {
+        for (const x in localStorage) {
+          if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
+            total += (localStorage[x].length + x.length) * 2;
+          }
         }
+      } else {
+        this.memoryCache.forEach((v, k) => {
+          total += (v.length + k.length) * 2;
+        });
       }
       const usedKb = Math.round(total / 1024);
-      // Assume 5MB limit
+      // Assume 5MB standard storage threshold
       const percent = Math.min(100, Math.round((usedKb / 5120) * 100));
       return { usedKb, percent };
     } catch {

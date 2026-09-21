@@ -81,7 +81,16 @@ class NotificationService {
     });
 
     const closeBtn = toast.querySelector('.toast-close') as HTMLButtonElement;
+    let timerId: number | null = null;
+    let dismissed = false;
+
     const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
+      if (timerId !== null) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
       toast.classList.add('translate-x-12', 'opacity-0');
       setTimeout(() => {
         toast.remove();
@@ -91,7 +100,7 @@ class NotificationService {
     closeBtn.addEventListener('click', dismiss);
 
     if (item.timeoutMs && item.timeoutMs > 0) {
-      setTimeout(dismiss, item.timeoutMs);
+      timerId = window.setTimeout(dismiss, item.timeoutMs);
     }
   }
 

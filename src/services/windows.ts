@@ -1,6 +1,7 @@
 import { AppDefinition, WindowState, AppId } from '../types';
 import { sound } from './sound';
 import { getSvgIcon } from '../ui/icons';
+import { logger } from '../utils/logger';
 
 type WindowListener = (windows: WindowState[], activeId: string | null) => void;
 
@@ -172,8 +173,33 @@ class WindowManager {
     // Setup window controls
     this.setupWindowEvents(winState, app);
 
-    // Render app inside window
-    app.render(contentElem, winState);
+    // Render app inside window with error boundary protection
+    try {
+      app.render(contentElem, winState);
+    } catch (renderError: unknown) {
+      const errMsg = renderError instanceof Error ? renderError.message : String(renderError);
+      logger.error('WindowManager', `Failed to render application [${app.id}]: ${errMsg}`, renderError);
+      contentElem.innerHTML = `
+        <div class="p-6 flex flex-col items-center justify-center h-full text-center select-none bg-slate-950/60">
+          <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mb-3">
+            ${getSvgIcon('alert', 'w-8 h-8')}
+          </div>
+          <h3 class="text-sm font-semibold text-slate-100 mb-1">Application Error</h3>
+          <p class="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">${errMsg || 'An unexpected error occurred while loading this app.'}</p>
+          <button id="retry-launch-${winId}" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-medium border border-cyan-500/30 transition-colors">
+            Reload Application
+          </button>
+        </div>
+      `;
+      contentElem.querySelector(`#retry-launch-${winId}`)?.addEventListener('click', () => {
+        try {
+          contentElem.innerHTML = '';
+          app.render(contentElem, winState);
+        } catch {
+          // ignore
+        }
+      });
+    }
 
     this.notify();
     return winState;
@@ -206,12 +232,21 @@ class WindowManager {
 
     sound.playClose();
 
-    if (win.onClose) {
-      win.onClose();
+    try {
+      if (win.onClose) {
+        win.onClose();
+      }
+    } catch (closeErr) {
+      logger.warn('WindowManager', `Error in window onClose handler [${win.id}]:`, closeErr);
     }
-    const app = this.apps.get(win.appId);
-    if (app && app.onClose) {
-      app.onClose(win);
+
+    try {
+      const app = this.apps.get(win.appId);
+      if (app && app.onClose) {
+        app.onClose(win);
+      }
+    } catch (appCloseErr) {
+      logger.warn('WindowManager', `Error in app onClose handler [${win.appId}]:`, appCloseErr);
     }
 
     win.element.classList.add('opacity-0', 'scale-90');

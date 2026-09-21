@@ -3,17 +3,45 @@ class SoundManager {
   private ctx: AudioContext | null = null;
   private enabled: boolean = true;
   private volume: number = 0.5; // 0 to 1
+  private gestureUnlocked: boolean = false;
 
-  private initCtx() {
-    if (!this.ctx && typeof window !== 'undefined') {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
+  constructor() {
+    this.registerGestureUnlock();
+  }
+
+  private registerGestureUnlock() {
+    if (typeof window === 'undefined') return;
+    const unlock = () => {
+      this.gestureUnlocked = true;
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
       }
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+  }
+
+  private initCtx(): AudioContext | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      if (!this.ctx || this.ctx.state === 'closed') {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended' && this.gestureUnlocked) {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch {
+      return null;
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+    return this.ctx;
   }
 
   public setEnabled(val: boolean) {

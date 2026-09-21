@@ -3,6 +3,7 @@ import { storage } from './services/storage';
 import { windowManager } from './services/windows';
 import { notifications } from './services/notifications';
 import { sound } from './services/sound';
+import { logger } from './utils/logger';
 import { WallpaperManager } from './ui/wallpaper';
 import { DesktopEnvironment } from './ui/desktop';
 import { Taskbar } from './ui/taskbar';
@@ -23,6 +24,9 @@ import { renderTerminalApp } from './apps/terminal';
 import { renderDevlogsApp } from './apps/devlogs';
 
 function initNovaOS() {
+  // 0. Initialize System Logger & Global Exception Traps
+  logger.init();
+
   // 1. Apply Persistent Settings & Theme
   const settings = storage.getSettings();
   document.documentElement.setAttribute('data-theme', settings.theme || 'cyberpunk');

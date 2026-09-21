@@ -2,6 +2,8 @@ import { windowManager } from './windows';
 import { storage } from './storage';
 import { notifications } from './notifications';
 import { AppId } from '../types';
+import { evaluateMath } from '../utils/math';
+import { logger } from '../utils/logger';
 
 export interface AssistantResponse {
   text: string;
@@ -49,19 +51,17 @@ class NovaAIEngine {
     // 2. Direct math calculations
     if (query.startsWith('calc ') || query.startsWith('calculate ') || /^[\d\s+\-*/().^%]+$/.test(query)) {
       const expr = query.replace(/^(calc|calculate|what is)\s*/i, '').trim();
-      try {
-        // Safe evaluation of basic math
-        const sanitized = expr.replace(/[^0-9+\-*/().%]/g, '');
-        // eslint-disable-next-line no-new-func
-        const result = Function(`'use strict'; return (${sanitized})`)();
+      const mathRes = evaluateMath(expr);
+      if (mathRes.success && mathRes.formatted !== undefined) {
+        logger.info('NovaAI', `Evaluated expression: ${expr} = ${mathRes.formatted}`);
         return {
-          text: `The calculation result for \`${expr}\` is: **${result}**`,
+          text: `The calculation result for \`${expr}\` is: **${mathRes.formatted}**`,
           actionTaken: 'calculated',
           suggestedPrompts: ['Open calculator', 'Take a note', 'System status'],
         };
-      } catch {
+      } else {
         return {
-          text: `I couldn't evaluate that math expression. You can try "Open calculator" for complex formulas.`,
+          text: `I couldn't evaluate that math expression (${mathRes.error || 'Syntax Error'}). You can try "Open calculator" for manual input.`,
         };
       }
     }

@@ -1,6 +1,7 @@
 import { WindowState } from '../types';
 import { sound } from '../services/sound';
 import { getSvgIcon } from '../ui/icons';
+import { evaluateMath } from '../utils/math';
 
 export function renderCalculatorApp(container: HTMLElement, win: WindowState) {
   let displayValue = '0';
@@ -87,17 +88,14 @@ export function renderCalculatorApp(container: HTMLElement, win: WindowState) {
         displayValue = '0';
       }
     } else if (key === '=') {
-      try {
-        const expr = (formula + displayValue).replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-        const sanitized = expr.replace(/[^0-9+\-*/().%]/g, '');
-        // eslint-disable-next-line no-new-func
-        const result = Function(`'use strict'; return (${sanitized})`)();
-        const formatted = String(Math.round(result * 10000000) / 10000000);
-        history.push(`${formula + displayValue} = ${formatted}`);
+      const expr = formula + displayValue;
+      const res = evaluateMath(expr);
+      if (res.success && res.formatted !== undefined) {
+        history.push(`${formula + displayValue} = ${res.formatted}`);
         if (history.length > 10) history.shift();
         formula = '';
-        displayValue = formatted;
-      } catch {
+        displayValue = res.formatted;
+      } else {
         displayValue = 'Error';
       }
     } else if (['+', '-', '*', '/'].includes(key)) {
