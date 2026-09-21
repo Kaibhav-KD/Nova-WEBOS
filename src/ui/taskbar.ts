@@ -465,9 +465,17 @@ export class Taskbar {
     });
 
     this.container.querySelector('#start-reboot-btn')?.addEventListener('click', () => {
-      if (confirm('Reboot Nova WebOS session?')) {
-        window.location.reload();
-      }
+      this.isStartOpen = false;
+      this.updateFlyoutsState();
+      notifications.confirmModal({
+        title: 'Reboot Nova WebOS',
+        message: 'Are you sure you want to reboot the operating system session?',
+        confirmText: 'Reboot Now',
+        isDestructive: false,
+        onConfirm: () => {
+          window.location.reload();
+        },
+      });
     });
 
     this.container.querySelector('#start-settings-btn')?.addEventListener('click', () => {

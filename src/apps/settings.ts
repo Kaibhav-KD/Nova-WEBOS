@@ -249,14 +249,20 @@ export function renderSettingsApp(container: HTMLElement, win: WindowState) {
 
     // Reset All
     container.querySelector('#settings-reset-all')?.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset all Nova WebOS data?')) {
-        sound.playClose();
-        storage.resetAllData();
-        notifications.show({ title: 'System Reset', message: 'All data cleared. Reloading session...', type: 'warning' });
-        setTimeout(() => {
-          window.location.reload();
-        }, 800);
-      }
+      notifications.confirmModal({
+        title: 'Factory Reset Nova WebOS',
+        message: 'Are you sure you want to reset all stored notes, files, events, and preferences? This action cannot be undone.',
+        confirmText: 'Clear All Data',
+        isDestructive: true,
+        onConfirm: () => {
+          sound.playClose();
+          storage.resetAllData();
+          notifications.show({ title: 'System Reset', message: 'All data cleared. Reloading session...', type: 'warning' });
+          setTimeout(() => {
+            window.location.reload();
+          }, 800);
+        },
+      });
     });
   };
 

@@ -104,6 +104,80 @@ class NotificationService {
     }
   }
 
+  public confirmModal(options: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+  }) {
+    sound.playNotification();
+    const overlay = document.createElement('div');
+    overlay.className =
+      'fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity duration-200 opacity-0';
+
+    const modal = document.createElement('div');
+    modal.className =
+      'w-full max-w-sm rounded-2xl bg-slate-900/95 border border-white/15 p-5 shadow-2xl flex flex-col gap-4 text-slate-100 transform scale-95 transition-all duration-200';
+
+    const confirmBtnClass = options.isDestructive
+      ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/25'
+      : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/25';
+
+    modal.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="p-2 rounded-xl ${options.isDestructive ? 'bg-rose-500/20 text-rose-400' : 'bg-cyan-500/20 text-cyan-400'} shrink-0">
+          ${getSvgIcon(options.isDestructive ? 'alert' : 'sparkles', 'w-5 h-5')}
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-slate-100">${options.title}</h3>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed">${options.message}</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+        <button id="modal-cancel" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 transition-colors">
+          ${options.cancelText || 'Cancel'}
+        </button>
+        <button id="modal-confirm" class="px-4 py-1.5 rounded-lg text-xs font-semibold shadow-lg transition-colors ${confirmBtnClass}">
+          ${options.confirmText || 'Confirm'}
+        </button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Fade in
+    requestAnimationFrame(() => {
+      overlay.classList.remove('opacity-0');
+      modal.classList.remove('scale-95');
+    });
+
+    const cleanup = () => {
+      overlay.classList.add('opacity-0');
+      modal.classList.add('scale-95');
+      setTimeout(() => overlay.remove(), 200);
+    };
+
+    modal.querySelector('#modal-cancel')?.addEventListener('click', () => {
+      sound.playClick();
+      cleanup();
+    });
+
+    modal.querySelector('#modal-confirm')?.addEventListener('click', () => {
+      sound.playClick();
+      cleanup();
+      options.onConfirm();
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        cleanup();
+      }
+    });
+  }
+
   public getHistory(): ToastNotification[] {
     return [...this.history];
   }

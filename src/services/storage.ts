@@ -382,9 +382,11 @@ class StorageManager {
     try {
       let total = 0;
       if (typeof window !== 'undefined' && window.localStorage) {
-        for (const x in localStorage) {
-          if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
-            total += (localStorage[x].length + x.length) * 2;
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+            const val = localStorage.getItem(key) || '';
+            total += (val.length + key.length) * 2;
           }
         }
       } else {
